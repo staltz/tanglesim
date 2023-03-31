@@ -1,8 +1,12 @@
+const TOTAL_MSGS = 50;
+const MERGE_RANGE = 6;
+const POWER_LAW = 0.14;
+
 const msgs = [];
 let latestID = 0;
 
 function powerLawRandom() {
-  return Math.pow(Math.random(), 0.2);
+  return Math.pow(Math.random(), POWER_LAW);
 }
 
 function randomBetween(start, end) {
@@ -67,7 +71,7 @@ function simPublish(mergeRange) {
   if (msgs.length === 0) {
     msgs.push({prev: [], depth: 0});
   } else {
-    let upto = -1;
+    let upto = -mergeRange;
     while (upto <= msgs.length - mergeRange) {
       upto = Math.ceil(powerLawRandom() * msgs.length);
     }
@@ -197,8 +201,6 @@ function* generateMermaid(oldest = 0) {
   yield '```';
 }
 
-const TOTAL_MSGS = 75;
-const MERGE_RANGE = 5;
 function run() {
   for (let i = 0; i < TOTAL_MSGS; i++) {
     simPublish(MERGE_RANGE);
@@ -208,7 +210,7 @@ function run() {
   for (const line of generateMermaid()) console.log(line);
 
   console.log('\n## Delete an old portion of the tangle');
-  const deletePoint1 = Math.ceil(TOTAL_MSGS * randomBetween(0.2, 0.7));
+  const deletePoint1 = Math.round(TOTAL_MSGS * 0.45);
   simDelete(deletePoint1);
   for (const line of generateMermaid(deletePoint1)) console.log(line);
 
