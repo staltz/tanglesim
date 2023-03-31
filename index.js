@@ -67,10 +67,9 @@ function simPublish(mergeRange) {
   if (msgs.length === 0) {
     msgs.push({prev: [], depth: 0});
   } else {
-    const upto = Math.ceil(powerLawRandom() * msgs.length);
-    if (upto <= msgs.length - mergeRange) {
-      simPublish(mergeRange);
-      return;
+    let upto = -1;
+    while (upto <= msgs.length - mergeRange) {
+      upto = Math.ceil(powerLawRandom() * msgs.length);
     }
     const prev = [...allTips(upto)];
     const depth = depthOfNode(prev);
