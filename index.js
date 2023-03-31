@@ -112,8 +112,9 @@ function simDelete(anchor) {
     if (pathToRoot.includes(i)) continue;
     msgs[i].deleted = true;
   }
+  const ancName = toAlphabet(anchor);
   console.log(
-    '- Delete everything before ' + toAlphabet(anchor) + ' except cert pool',
+    `- Delete everything before ${ancName} (${anchor}) except cert pool`,
   );
   console.log('- Greedy path to root:', pathToRoot.map(toAlphabet).join('->'));
   const certPoolSize = msgs.filter((m, i) => !m.deleted & (i < anchor)).length;
@@ -127,15 +128,25 @@ function toAlphabet(i) {
     return String.fromCharCode('A'.charCodeAt(0) + i);
   } else if (i < range * range) {
     return (
-      String.fromCharCode('A'.charCodeAt(0) + Math.floor(i / range)) +
+      String.fromCharCode('A'.charCodeAt(0) + Math.floor((i - range) / range)) +
+      String.fromCharCode('A'.charCodeAt(0) + (i % range))
+    );
+  } else if (i < range * range * range) {
+    return (
+      String.fromCharCode(
+        'A'.charCodeAt(0) + Math.floor((i - range * range) / (range * range)),
+      ) +
+      String.fromCharCode(
+        'A'.charCodeAt(0) + Math.floor((i % (range * range)) / range),
+      ) +
       String.fromCharCode('A'.charCodeAt(0) + (i % range))
     );
   } else {
-    throw new Error('too large');
+    throw new Error('too big');
   }
 }
 
-function* generateMermaid() {
+function* generateMermaid(oldest = 0) {
   yield '```mermaid';
   yield 'graph RL';
   for (let i = 0; i < msgs.length; i++) {
@@ -143,6 +154,7 @@ function* generateMermaid() {
     const name = toAlphabet(i);
     const label = `${name}["${name} (${m.depth})"]`;
     if (m.deleted) yield `${label}:::weak`;
+    else if (i < oldest) yield `${label}:::cert`;
     else yield label;
   }
   let linkCount = 0;
@@ -175,15 +187,18 @@ function* generateMermaid() {
     yield `linkStyle ${lipmaaLinkIds.join(',')} stroke:#f00,stroke-width:2;`;
   }
   if (deletedLipmaaLinkIds.length > 0) {
-    yield `linkStyle ${deletedLipmaaLinkIds.join(',')} stroke:#f003,stroke-width:2;`;
+    yield `linkStyle ${deletedLipmaaLinkIds.join(
+      ',',
+    )} stroke:#f003,stroke-width:2;`;
   }
   yield '';
   yield 'classDef default fill:#6df,stroke:#fff0,color:#000';
   yield 'classDef weak fill:#6df2,stroke:#fff0,color:#000';
+  yield 'classDef cert fill:#fd6,stroke:#fff0,color:#000';
   yield '```';
 }
 
-const TOTAL_MSGS = 40;
+const TOTAL_MSGS = 75;
 const MERGE_RANGE = 5;
 function run() {
   for (let i = 0; i < TOTAL_MSGS; i++) {
@@ -193,15 +208,15 @@ function run() {
   console.log('## Full tangle with no deletes');
   for (const line of generateMermaid()) console.log(line);
 
-  console.log('## Delete an old portion of the tangle');
-  const deletePoint1 = Math.ceil(TOTAL_MSGS * randomBetween(0.2, 0.6));
+  console.log('\n## Delete an old portion of the tangle');
+  const deletePoint1 = Math.ceil(TOTAL_MSGS * randomBetween(0.2, 0.7));
   simDelete(deletePoint1);
-  for (const line of generateMermaid()) console.log(line);
+  for (const line of generateMermaid(deletePoint1)) console.log(line);
 
-  console.log('## Delete more of the tangle');
+  console.log('\n## Delete more of the tangle');
   const deletePoint2 = Math.ceil((deletePoint1 + TOTAL_MSGS) / 2);
   simDelete(deletePoint2);
-  for (const line of generateMermaid()) console.log(line);
+  for (const line of generateMermaid(deletePoint2)) console.log(line);
 }
 
 run();
