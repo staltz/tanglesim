@@ -169,7 +169,7 @@ function* generateMermaid() {
     }
   }
   if (deletedLinks.length > 0) {
-    yield `linkStyle ${deletedLinks.join(',')} stroke:#fff2,stroke-width:2;`;
+    yield `linkStyle ${deletedLinks.join(',')} stroke:#0002,stroke-width:2;`;
   }
   if (lipmaaLinkIds.length > 0) {
     yield `linkStyle ${lipmaaLinkIds.join(',')} stroke:#f00,stroke-width:2;`;
